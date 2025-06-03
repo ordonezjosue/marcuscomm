@@ -56,10 +56,12 @@ if uploaded_file is not None and vhi_file is not None:
 
             # --- Load VHI/FIOS Activations ---
             try:
-                vhi_df = pd.read_excel(vhi_file, engine='openpyxl')
+                vhi_df_raw = pd.read_excel(vhi_file, header=None, engine='openpyxl')
+                vhi_df_raw.columns = vhi_df_raw.iloc[0].fillna("").astype(str)
+                vhi_df = vhi_df_raw[1:].copy()
                 st.markdown("### 🧪 Excel Columns Detected:")
                 st.write(vhi_df.columns.tolist())
-                vhi_df.columns = [col.encode("ascii", "ignore").decode().strip().replace("\n", " ").replace("\r", "") for col in vhi_df.columns]
+                # vhi_df.columns already set manually from first row
 
                 if any(col in vhi_df.columns for col in ['(Q) 5G Consumer Internet', '(Q) FiOS Sales']):
                     vhi_df['Employee Full Name'] = vhi_df['Employee Full Name'].astype(str).fillna('')

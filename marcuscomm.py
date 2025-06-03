@@ -57,7 +57,8 @@ if uploaded_file is not None and vhi_file is not None:
             # --- Load VHI/FIOS Activations ---
             try:
                 vhi_df_raw = pd.read_excel(vhi_file, header=None, engine='openpyxl')
-                vhi_df_raw.columns = vhi_df_raw.iloc[0].fillna("").astype(str)
+                vhi_df_raw.columns = vhi_df_raw.iloc[0].astype(str).str.replace('
+', ' ').str.strip()
                 vhi_df = vhi_df_raw[1:].copy()
                 st.markdown("### 🧪 Excel Columns Detected:")
                 st.write(vhi_df.columns.tolist())

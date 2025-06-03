@@ -58,12 +58,14 @@ if uploaded_file is not None and vhi_file is not None:
             try:
                 vhi_df = pd.read_excel(vhi_file, engine='openpyxl')
                 vhi_df.columns = [col.strip() for col in vhi_df.columns]
-                if '(Q) 5G Consumer Internet' in vhi_df.columns:
+                if any(col in vhi_df.columns for col in ['(Q) 5G Consumer Internet', '(Q) FiOS Sales']):
                     vhi_df['Employee Full Name'] = vhi_df['Employee Full Name'].astype(str).fillna('')
                     marcus_vhi = vhi_df[vhi_df['Employee Full Name'].str.lower().str.contains('marcus')]
-                    vhi_fios_count = pd.to_numeric(marcus_vhi['(Q) 5G Consumer Internet'].dropna().sum())
+                    vhi_fios_5g = pd.to_numeric(marcus_vhi['(Q) 5G Consumer Internet'].dropna().sum()) if '(Q) 5G Consumer Internet' in marcus_vhi.columns else 0
+                    fios_sales = pd.to_numeric(marcus_vhi['(Q) FiOS Sales'].dropna().sum()) if '(Q) FiOS Sales' in marcus_vhi.columns else 0
+                    vhi_fios_count = vhi_fios_5g + fios_sales
                 else:
-                    st.warning("Column '(Q) 5G Consumer Internet' not found in Excel file.")
+                    st.warning("Required columns '(Q) 5G Consumer Internet' or '(Q) FiOS Sales' not found in Excel file.")
                     vhi_fios_count = 0
             except Exception as e:
                 st.warning(f"Could not process Excel file: {e}")

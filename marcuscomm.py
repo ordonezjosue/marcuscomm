@@ -10,7 +10,7 @@ st.markdown("Upload your monthly sales CSV to automatically evaluate key perform
 uploaded_file = st.file_uploader("📁 Upload your sales CSV file", type=["csv"])
 
 # --- Thresholds ---
-thresh_gp = 40000
+thresh_gp = 25000
 thresh_vmp = 55  # This is "VZ Perks Rate"
 thresh_gp_per_smt = 460
 
@@ -28,7 +28,7 @@ if uploaded_file is not None:
         else:
             marcus_df['GP'] = pd.to_numeric(marcus_df['GP'].astype(str).str.replace(r'[$,]', '', regex=True), errors='coerce')
             marcus_df['VZ Perks Rate'] = pd.to_numeric(marcus_df['VZ Perks Rate'].astype(str).str.replace('%', ''), errors='coerce')
-            marcus_df['GP Per SMT'] = pd.to_numeric(marcus_df['GP Per SMT'], errors='coerce')
+            marcus_df['GP Per SMT'] = pd.to_numeric(marcus_df['GP Per SMT'].astype(str).str.replace(r'[$,]', '', regex=True), errors='coerce')
 
             marcus = marcus_df.iloc[-1]  # Get latest entry for Marcus
 

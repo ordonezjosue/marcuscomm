@@ -55,7 +55,9 @@ if uploaded_file is not None and vhi_file is not None:
                 vhi_df = pd.read_excel(vhi_file)
                 vhi_df.columns = [col.strip() for col in vhi_df.columns]
                 if '(Q) 5G Consumer Internet' in vhi_df.columns:
-                    vhi_fios_count = pd.to_numeric(vhi_df['(Q) 5G Consumer Internet'].dropna().sum())
+                    vhi_df['Employee Full Name'] = vhi_df['Employee Full Name'].astype(str).fillna('')
+                    marcus_vhi = vhi_df[vhi_df['Employee Full Name'].str.lower().str.contains('marcus')]
+                    vhi_fios_count = pd.to_numeric(marcus_vhi['(Q) 5G Consumer Internet'].dropna().sum())
                 else:
                     st.warning("Column '(Q) 5G Consumer Internet' not found in Excel file.")
                     vhi_fios_count = 0

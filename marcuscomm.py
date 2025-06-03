@@ -38,6 +38,12 @@ if uploaded_file is not None:
             # Manual numeric input for VHI/FIOS
             vhi_fios_count = st.number_input("Enter Marcus's total VHI/FIOS Activations:", min_value=0, step=1)
 
+            # KPI Evaluations
+            met_gp = not pd.isna(marcus['GP']) and marcus['GP'] >= thresh_gp
+            met_vmp = not pd.isna(marcus['VZ Perks Rate']) and marcus['VZ Perks Rate'] >= thresh_vmp
+            met_gp_per_smt = not pd.isna(marcus['GP Per SMT']) and marcus['GP Per SMT'] >= thresh_gp_per_smt
+            met_vhi_fios = vhi_fios_count >= thresh_vhi_fios
+
             summary_data = {
                 "Metric": [
                     "Gross Profit",
@@ -58,15 +64,25 @@ if uploaded_file is not None:
                     f">= {thresh_vhi_fios}"
                 ],
                 "Met?": [
-                    "Yes" if not pd.isna(marcus['GP']) and marcus['GP'] >= thresh_gp else "No",
-                    "Yes" if not pd.isna(marcus['VZ Perks Rate']) and marcus['VZ Perks Rate'] >= thresh_vmp else "No",
-                    "Yes" if not pd.isna(marcus['GP Per SMT']) and marcus['GP Per SMT'] >= thresh_gp_per_smt else "No",
-                    "Yes" if vhi_fios_count >= thresh_vhi_fios else "No"
+                    "Yes" if met_gp else "No",
+                    "Yes" if met_vmp else "No",
+                    "Yes" if met_gp_per_smt else "No",
+                    "Yes" if met_vhi_fios else "No"
                 ]
             }
 
             summary_df = pd.DataFrame(summary_data)
             st.dataframe(summary_df, use_container_width=True)
+
+            # --- Commission Calculator ---
+            st.subheader("💰 Commission Calculator")
+
+            all_targets_met = all([met_gp, met_vmp, met_gp_per_smt, met_vhi_fios])
+            commission_rate = 0.30 if all_targets_met else 0.25
+            commission_earned = marcus['GP'] * commission_rate if not pd.isna(marcus['GP']) else 0
+
+            st.markdown(f"**Commission Rate:** {'30%' if all_targets_met else '25%'}")
+            st.markdown(f"**Commission Earned:** ${commission_earned:,.2f}")
 
     except Exception as e:
         st.error(f"Error processing file: {e}")

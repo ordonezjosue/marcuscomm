@@ -23,6 +23,10 @@ Upload your monthly sales CSV to automatically evaluate key performance metrics 
 # --- Upload CSV ---
 uploaded_file = st.file_uploader("📁 Upload your sales CSV file", type=["csv"])
 
+if uploaded_file is not None:
+    st.success("✅ Power BI sales CSV uploaded successfully!")
+    st.markdown("➡️ Now please upload the RQ report (.xlsx) to continue.")
+
 # --- Upload VHI/FIOS Excel File ---
 vhi_file = st.file_uploader("📄 Upload the RQ report from Performance Mertrics Summary Report", type=["xlsx"])
 
@@ -52,7 +56,7 @@ if uploaded_file is not None and vhi_file is not None:
 
             # --- Load VHI/FIOS Activations ---
             try:
-                vhi_df = pd.read_excel(vhi_file)
+                vhi_df = pd.read_excel(vhi_file, engine='openpyxl')
                 vhi_df.columns = [col.strip() for col in vhi_df.columns]
                 if '(Q) 5G Consumer Internet' in vhi_df.columns:
                     vhi_df['Employee Full Name'] = vhi_df['Employee Full Name'].astype(str).fillna('')

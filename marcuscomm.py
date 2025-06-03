@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-st.set_page_config(page_title="Marcus Commission KPI Checker", layout="wide")
-st.title("📊 Marcus KPI Evaluation Tool")
+st.set_page_config(page_title="Marcus Commission Calculator", layout="wide")
+st.title("📊 Marcus Commission Calculator")
 st.markdown("Upload your monthly sales CSV to automatically evaluate key performance metrics for Marcus.")
 
 # --- Upload CSV ---
@@ -13,6 +13,7 @@ uploaded_file = st.file_uploader("📁 Upload your sales CSV file", type=["csv"]
 thresh_gp = 25000
 thresh_vmp = 55  # This is "VZ Perks Rate"
 thresh_gp_per_smt = 460
+thresh_vhi_fios = 8
 
 if uploaded_file is not None:
     try:
@@ -34,8 +35,8 @@ if uploaded_file is not None:
 
             st.subheader("📋 Evaluation Summary for Marcus")
 
-            # Manual input for VHI/FIOS
-            vhi_fios_met = st.selectbox("Did Marcus meet the VHI/FIOS Activations target?", ["Yes", "No"])
+            # Manual numeric input for VHI/FIOS
+            vhi_fios_count = st.number_input("Enter Marcus's total VHI/FIOS Activations:", min_value=0, step=1)
 
             summary_data = {
                 "Metric": [
@@ -48,19 +49,19 @@ if uploaded_file is not None:
                     f"${marcus['GP']:,.2f}" if not pd.isna(marcus['GP']) else "N/A",
                     f"{marcus['VZ Perks Rate']:.2f}%" if not pd.isna(marcus['VZ Perks Rate']) else "N/A",
                     f"${marcus['GP Per SMT']:,.2f}" if not pd.isna(marcus['GP Per SMT']) else "N/A",
-                    vhi_fios_met
+                    vhi_fios_count
                 ],
                 "Threshold": [
                     f">= ${thresh_gp:,}",
                     f">= {thresh_vmp}%",
                     f">= ${thresh_gp_per_smt}",
-                    "Manual Input"
+                    f">= {thresh_vhi_fios}"
                 ],
                 "Met?": [
                     "Yes" if not pd.isna(marcus['GP']) and marcus['GP'] >= thresh_gp else "No",
                     "Yes" if not pd.isna(marcus['VZ Perks Rate']) and marcus['VZ Perks Rate'] >= thresh_vmp else "No",
                     "Yes" if not pd.isna(marcus['GP Per SMT']) and marcus['GP Per SMT'] >= thresh_gp_per_smt else "No",
-                    vhi_fios_met
+                    "Yes" if vhi_fios_count >= thresh_vhi_fios else "No"
                 ]
             }
 

@@ -33,7 +33,7 @@ if uploaded_file is not None:
 
             marcus = marcus_df.iloc[-1]  # Get latest entry for Marcus
 
-            st.subheader("📋 Evaluation Summary for Marcus")
+            st.subheader("📋 Marcus Commission Calculator")
 
             # Manual numeric input for VHI/FIOS
             vhi_fios_count = st.number_input("Enter Marcus's total VHI/FIOS Activations:", min_value=0, step=1)
@@ -55,7 +55,7 @@ if uploaded_file is not None:
                     f"${marcus['GP']:,.2f}" if not pd.isna(marcus['GP']) else "N/A",
                     f"{marcus['VZ Perks Rate']:.2f}%" if not pd.isna(marcus['VZ Perks Rate']) else "N/A",
                     f"${marcus['GP Per SMT']:,.2f}" if not pd.isna(marcus['GP Per SMT']) else "N/A",
-                    vhi_fios_count
+                    f"{vhi_fios_count}"
                 ],
                 "Threshold": [
                     f">= ${thresh_gp:,}",

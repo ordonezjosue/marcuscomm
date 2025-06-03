@@ -23,13 +23,16 @@ Upload your monthly sales CSV to automatically evaluate key performance metrics 
 # --- Upload CSV ---
 uploaded_file = st.file_uploader("📁 Upload your sales CSV file", type=["csv"])
 
+# --- Upload VHI/FIOS Excel File ---
+vhi_file = st.file_uploader("📄 Upload the RQ report from Performance Mertrics Summary Report", type=["xlsx"])
+
 # --- Thresholds ---
 thresh_gp = 25000
 thresh_vmp = 55  # This is "VZ Perks Rate"
 thresh_gp_per_smt = 460
 thresh_vhi_fios = 8
 
-if uploaded_file is not None:
+if uploaded_file is not None and vhi_file is not None:
     try:
         df = pd.read_csv(uploaded_file)
         df.columns = [col.strip() for col in df.columns]
@@ -47,10 +50,20 @@ if uploaded_file is not None:
 
             marcus = marcus_df.iloc[-1]  # Get latest entry for Marcus
 
-            st.subheader("📋 Marcus Commission Calculator")
+            # --- Load VHI/FIOS Activations ---
+            try:
+                vhi_df = pd.read_excel(vhi_file)
+                vhi_df.columns = [col.strip() for col in vhi_df.columns]
+                if '(Q) 5G Consumer Internet' in vhi_df.columns:
+                    vhi_fios_count = pd.to_numeric(vhi_df['(Q) 5G Consumer Internet'].dropna().sum())
+                else:
+                    st.warning("Column '(Q) 5G Consumer Internet' not found in Excel file.")
+                    vhi_fios_count = 0
+            except Exception as e:
+                st.warning(f"Could not process Excel file: {e}")
+                vhi_fios_count = 0
 
-            # Manual numeric input for VHI/FIOS
-            vhi_fios_count = st.number_input("Enter Marcus's total VHI/FIOS Activations:", min_value=0, step=1)
+            st.subheader("📋 Marcus Commission Calculator")
 
             # KPI Evaluations
             met_gp = not pd.isna(marcus['GP']) and marcus['GP'] >= thresh_gp

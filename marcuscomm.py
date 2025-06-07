@@ -25,8 +25,9 @@ uploaded_file = st.file_uploader("📁 Upload your sales CSV file", type=["csv"]
 
 # --- Thresholds ---
 thresh_gp = 25000
-thresh_vmp = 55  # VZ Perks Rate
+thresh_vmp = 55
 thresh_gp_per_smt = 460
+thresh_vhi_fios = 8  # NEW METRIC
 
 if uploaded_file is not None:
     try:
@@ -41,9 +42,12 @@ if uploaded_file is not None:
         if marcus_df.empty:
             st.warning("No records found for Marcus. Please check the CSV file.")
         else:
+            # Clean numeric fields
             marcus_df['GP'] = pd.to_numeric(marcus_df['GP'].astype(str).str.replace(r'[$,]', '', regex=True), errors='coerce')
             marcus_df['VZ Perks Rate'] = pd.to_numeric(marcus_df['VZ Perks Rate'].astype(str).str.replace('%', ''), errors='coerce')
             marcus_df['GP Per SMT'] = pd.to_numeric(marcus_df['GP Per SMT'].astype(str).str.replace(r'[$,]', '', regex=True), errors='coerce')
+            marcus_df['VZ FWA GA'] = pd.to_numeric(marcus_df['VZ FWA GA'], errors='coerce')
+            marcus_df['VZ FIOS GA'] = pd.to_numeric(marcus_df['VZ FIOS GA'], errors='coerce')
 
             marcus = marcus_df.iloc[-1]  # Latest entry
 
@@ -52,26 +56,39 @@ if uploaded_file is not None:
             met_vmp = not pd.isna(marcus['VZ Perks Rate']) and marcus['VZ Perks Rate'] >= thresh_vmp
             met_gp_per_smt = not pd.isna(marcus['GP Per SMT']) and marcus['GP Per SMT'] >= thresh_gp_per_smt
 
+            vhi_fios_count = 0
+            if not pd.isna(marcus['VZ FWA GA']):
+                vhi_fios_count += marcus['VZ FWA GA']
+            if not pd.isna(marcus['VZ FIOS GA']):
+                vhi_fios_count += marcus['VZ FIOS GA']
+
+            met_vhi_fios = vhi_fios_count >= thresh_vhi_fios
+
+            # Summary Table
             summary_data = {
                 "Metric": [
                     "Gross Profit",
                     "VMP (VZ Perks Rate)",
-                    "Gross Profit Per Smartphone"
+                    "Gross Profit Per Smartphone",
+                    "VHI/FIOS Activations"
                 ],
                 "Value": [
                     f"${marcus['GP']:,.2f}" if not pd.isna(marcus['GP']) else "N/A",
                     f"{marcus['VZ Perks Rate']:.2f}%" if not pd.isna(marcus['VZ Perks Rate']) else "N/A",
-                    f"${marcus['GP Per SMT']:,.2f}" if not pd.isna(marcus['GP Per SMT']) else "N/A"
+                    f"${marcus['GP Per SMT']:,.2f}" if not pd.isna(marcus['GP Per SMT']) else "N/A",
+                    f"{int(vhi_fios_count)}"
                 ],
                 "Threshold": [
                     f">= ${thresh_gp:,}",
                     f">= {thresh_vmp}%",
-                    f">= ${thresh_gp_per_smt}"
+                    f">= ${thresh_gp_per_smt}",
+                    f">= {thresh_vhi_fios}"
                 ],
                 "Met?": [
                     "Yes" if met_gp else "No",
                     "Yes" if met_vmp else "No",
-                    "Yes" if met_gp_per_smt else "No"
+                    "Yes" if met_gp_per_smt else "No",
+                    "Yes" if met_vhi_fios else "No"
                 ]
             }
 
@@ -81,7 +98,7 @@ if uploaded_file is not None:
 
             # --- Commission Calculator ---
             st.subheader("💰 Commission Calculator")
-            all_targets_met = all([met_gp, met_vmp, met_gp_per_smt])
+            all_targets_met = all([met_gp, met_vmp, met_gp_per_smt, met_vhi_fios])
             commission_rate = 0.30 if all_targets_met else 0.25
             commission_earned = marcus['GP'] * commission_rate if not pd.isna(marcus['GP']) else 0
 

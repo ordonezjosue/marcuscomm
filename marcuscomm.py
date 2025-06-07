@@ -27,7 +27,7 @@ uploaded_file = st.file_uploader("📁 Upload your sales CSV file", type=["csv"]
 thresh_gp = 25000
 thresh_vmp = 55
 thresh_gp_per_smt = 460
-thresh_vhi_fios = 8  # NEW METRIC
+thresh_vhi_fios = 8
 
 if uploaded_file is not None:
     try:
@@ -104,6 +104,26 @@ if uploaded_file is not None:
 
             st.markdown(f"**Commission Rate:** {'30%' if all_targets_met else '25%'}")
             st.markdown(f"**Commission Earned:** ${commission_earned:,.2f}")
+
+            # --- Explanation of Pay Structure ---
+            st.markdown("---")
+            st.subheader("📘 Commission Structure Explained")
+            st.markdown("""
+Your commission is based on whether you meet or exceed **four key performance thresholds** for the month:
+
+1. **Gross Profit (GP)** must be at least **$25,000**
+2. **VZ Perks Rate (VMP)** must be **55% or higher**
+3. **Gross Profit Per Smartphone (GP/SMT)** must be **$460 or more**
+4. **VHI/FIOS Activations** (combined total of VZ FWA GA and VZ FIOS GA) must be **8 or more**
+
+### 💸 Commission Payout Logic:
+- If **all 4 metrics are met**, your commission rate is **30% of your total GP**
+- If **any metric is missed**, your commission rate is **25% of your total GP**
+
+This calculator automatically checks each of those for you and gives you your final **commission rate** and **earnings** based on your performance.
+
+If you have any questions, reach out to management or your team lead.
+""")
 
     except Exception as e:
         st.error(f"Error processing file: {e}")

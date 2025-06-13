@@ -114,7 +114,7 @@ Your commission is based on whether you meet or exceed **four key performance th
 1. **Gross Profit (GP)** must be at least **$25,000**
 2. **VZ Perks Rate (VMP)** must be **55% or higher**
 3. **Gross Profit Per Smartphone (GP/SMT)** must be **$460 or more**
-4. **VHI/FIOS Activations** (combined total of VZ FWA GA and VZ FIOS GA) must be **8 or more**
+4. **VHI/FIOS Activations** (combined total of VZ FWA GA and VZ FIOS GA) must be **8 or more** (For FIOS, only transactions that were successfully installed will be counted. For VHI, only transactions that were activated will be counted, minus VHI cancelled within 30 days)
 
 ### 💸 Commission Payout Logic:
 - If **all 4 metrics are met**, your commission rate is **30% of your total GP**

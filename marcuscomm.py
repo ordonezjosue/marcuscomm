@@ -64,7 +64,7 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
     # Body content using plain Paragraph with line breaks instead of <para>
     body_text = (
         f"Dear Marcus Altman,<br/><br/>"
-        f"<br/>&nbsp;&nbsp;&nbsp;&nbsp;Elypse Systems and Solutions Inc presents to you your commission statement per the compensation structure and your results in {report_month}. You will be paid {tier_label}, this is in accordance to your performance and compensation structure."
+        f"<br/>&nbsp;&nbsp;&nbsp;&nbsp;Elypse Systems and Solutions Inc presents to you your commission statement based on your results from {report_month}. This statement is scheduled for payout in {statement_month}. You will be paid {tier_label}, in accordance with your performance and compensation structure."
     )
     elements.append(Paragraph(body_text, styles['Normal']))
     elements.append(Spacer(1, 20))
@@ -106,6 +106,7 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
     doc.build(elements)
     buffer.seek(0)
     return buffer, file_label
+
 
 
 

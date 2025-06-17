@@ -39,7 +39,8 @@ thresh_vhi_fios = 8
 def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num_draws=3):
     buffer = io.BytesIO()
     future_date = datetime.today() + relativedelta(months=2)
-    month_label = future_date.strftime("%B %Y")
+    statement_month = future_date.strftime("%B %Y")
+    report_month = (future_date - relativedelta(months=1)).strftime("%B")
     file_label = future_date.strftime("%B_%Y")
 
     doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
@@ -52,7 +53,7 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
         spaceAfter=12, spaceBefore=12,
         fontName='Helvetica-Bold'
     )
-    elements.append(Paragraph(f"MARCUS ALTMAN {month_label.upper()} COMMISSION SETTLEMENT STATEMENT", title_style))
+    elements.append(Paragraph(f"MARCUS ALTMAN {statement_month.upper()} COMMISSION SETTLEMENT STATEMENT", title_style))
 
     # Add spacing below header
     elements.append(Spacer(1, 10))
@@ -63,7 +64,7 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
     # Body content using plain Paragraph with line breaks instead of <para>
     body_text = (
         f"Dear Marcus Altman,<br/><br/>"
-        f"<br/>&nbsp;&nbsp;&nbsp;&nbsp;Elypse Systems and Solutions Inc presents to you your commission statement per the compensation structure and your results in {month_label.split()[0]}. You will be paid {tier_label}, this is in accordance to your performance and compensation structure."
+        f"<br/>&nbsp;&nbsp;&nbsp;&nbsp;Elypse Systems and Solutions Inc presents to you your commission statement per the compensation structure and your results in {report_month}. You will be paid {tier_label}, this is in accordance to your performance and compensation structure."
     )
     elements.append(Paragraph(body_text, styles['Normal']))
     elements.append(Spacer(1, 20))
@@ -97,7 +98,7 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
     elements.append(Spacer(1, 20))
 
     footer_text = f"""
-    Keep in mind there is no draw for this upcoming week pay date. Total owed to you is <b>$xxxx.xx</b>. Any chargebacks for {month_label.split()[0]} may appear in future settlements within 180 days. If you accept this statement as final, please reply via e-mail. For any questions or disputes, respond within one business day. You can reach me at <a href='mailto:Thimotee.Wiguen@wireless-zone.com'>Thimotee.Wiguen@wireless-zone.com</a>.
+    Keep in mind there is no draw for this upcoming week pay date. Total owed to you is <b>$xxxx.xx</b>. Any chargebacks for {report_month} may appear in future settlements within 180 days. If you accept this statement as final, please reply via e-mail. For any questions or disputes, respond within one business day. You can reach me at <a href='mailto:Thimotee.Wiguen@wireless-zone.com'>Thimotee.Wiguen@wireless-zone.com</a>.
     <br/><br/>Thank you.<br/><br/><font color='black'><i><b>-Wiguen</b></i></font>
     """
     elements.append(Paragraph(footer_text, styles['Normal']))
@@ -105,6 +106,7 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
     doc.build(elements)
     buffer.seek(0)
     return buffer, file_label
+
 
 
 

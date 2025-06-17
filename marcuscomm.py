@@ -48,14 +48,18 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
 
     title_style = ParagraphStyle(
         'TitleStyle', fontSize=14, alignment=1,
-        textColor=colors.white, backColor=colors.lightblue,
-        spaceAfter=12, spaceBefore=12
+        textColor=colors.black, backColor=None,
+        spaceAfter=12, spaceBefore=12,
+        fontName='Helvetica-Bold'
     )
     elements.append(Paragraph(f"MARCUS ALTMAN {month_label.upper()} COMMISSION SETTLEMENT STATEMENT", title_style))
 
+    # Determine tier level
+    tier_label = "tier 1 at 25%" if commission_rate == 25 else "tier 2 at 30%"
+
     body_text = f"""
-    Dear Marcus Altman,<br/><br/>
-    <b>Elypse</b> Systems and Solutions Inc presents to you your commission statement per the compensation structure and your results in {month_label.split()[0]}. You will be paid tier 3 at {commission_rate}%, this is in accordance to your performance and compensation structure.
+    <para leftIndent=20>Dear Marcus Altman,<br/><br/>
+    Elypse Systems and Solutions Inc presents to you your commission statement per the compensation structure and your results in {month_label.split()[0]}. You will be paid {tier_label}, this is in accordance to your performance and compensation structure.</para>
     """
     elements.append(Paragraph(body_text, styles['Normal']))
     elements.append(Spacer(1, 20))
@@ -97,6 +101,7 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
     doc.build(elements)
     buffer.seek(0)
     return buffer, file_label
+
 
 
 # --- Main App Logic ---

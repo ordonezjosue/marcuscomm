@@ -54,12 +54,16 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
     )
     elements.append(Paragraph(f"MARCUS ALTMAN {month_label.upper()} COMMISSION SETTLEMENT STATEMENT", title_style))
 
+    # Add spacing below header
+    elements.append(Spacer(1, 10))
+
     # Determine tier level
     tier_label = "tier 1 at 25%" if commission_rate == 25 else "tier 2 at 30%"
 
+    # Body content with indentation only on second line
     body_text = f"""
-    <para leftIndent=20>Dear Marcus Altman,<br/><br/>
-    Elypse Systems and Solutions Inc presents to you your commission statement per the compensation structure and your results in {month_label.split()[0]}. You will be paid {tier_label}, this is in accordance to your performance and compensation structure.</para>
+    Dear Marcus Altman,<br/><br/>
+    <para leftIndent=20>Elypse Systems and Solutions Inc presents to you your commission statement per the compensation structure and your results in {month_label.split()[0]}. You will be paid {tier_label}, this is in accordance to your performance and compensation structure.</para>
     """
     elements.append(Paragraph(body_text, styles['Normal']))
     elements.append(Spacer(1, 20))
@@ -93,7 +97,7 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
     elements.append(Spacer(1, 20))
 
     footer_text = f"""
-    Keep in mind there is no draw for this upcoming week pay date. Total owed to you is <b>${paid_total:,.2f}</b>. Any chargebacks for {month_label.split()[0]} may appear in future settlements within 180 days. If you accept this statement as final, please reply via e-mail. For any questions or disputes, respond within one business day. You can reach me at <a href='mailto:Thimotee.Wiguen@wireless-zone.com'>Thimotee.Wiguen@wireless-zone.com</a>.
+    Keep in mind there is no draw for this upcoming week pay date. Total owed to you is <b>$xxxx.xx</b>. Any chargebacks for {month_label.split()[0]} may appear in future settlements within 180 days. If you accept this statement as final, please reply via e-mail. For any questions or disputes, respond within one business day. You can reach me at <a href='mailto:Thimotee.Wiguen@wireless-zone.com'>Thimotee.Wiguen@wireless-zone.com</a>.
     <br/><br/>Thank you.<br/><br/><font color='black'><i><b>-Wiguen</b></i></font>
     """
     elements.append(Paragraph(footer_text, styles['Normal']))
@@ -101,6 +105,7 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
     doc.build(elements)
     buffer.seek(0)
     return buffer, file_label
+
 
 
 

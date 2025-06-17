@@ -60,11 +60,11 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
     # Determine tier level
     tier_label = "tier 1 at 25%" if commission_rate == 25 else "tier 2 at 30%"
 
-    # Body content with indentation only on second line
-    body_text = f"""
-    Dear Marcus Altman,<br/><br/>
-    <para leftIndent=20>Elypse Systems and Solutions Inc presents to you your commission statement per the compensation structure and your results in {month_label.split()[0]}. You will be paid {tier_label}, this is in accordance to your performance and compensation structure.</para>
-    """
+    # Body content using plain Paragraph with line breaks instead of <para>
+    body_text = (
+        f"Dear Marcus Altman,<br/><br/>"
+        f"<br/>&nbsp;&nbsp;&nbsp;&nbsp;Elypse Systems and Solutions Inc presents to you your commission statement per the compensation structure and your results in {month_label.split()[0]}. You will be paid {tier_label}, this is in accordance to your performance and compensation structure."
+    )
     elements.append(Paragraph(body_text, styles['Normal']))
     elements.append(Spacer(1, 20))
     elements.append(Paragraph("Here is the details and breakdown:", styles['Normal']))

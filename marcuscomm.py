@@ -10,30 +10,32 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import io
 
 st.set_page_config(page_title="Marcus Commission Calculator", layout="wide")
-st.title("\U0001F4CA Marcus Commission Calculator")
+st.title("📊 Marcus Commission Calculator")
 
 st.markdown("""
 Upload your monthly sales CSV to automatically evaluate key performance metrics for Marcus.
 
-### \U0001F4C2 How to Export Your Sales CSV from Power BI:
+### 📂 How to Export Your Sales CSV from Power BI:
 1. Log into **Power BI**  
 2. Go to **WZ Sales Analysis**  
 3. Scroll to the bottom and select **KPI Details**  
 4. At the top, click **Employee**  
-5. Click the **three dots (\u22EF)** next to "More Options"  
+5. Click the **three dots (⋯)** next to "More Options"  
 6. Select **Export data**  
 7. Choose **Summarized data**  
 8. Select **.CSV** as the file format and save it to your computer  
 9. Upload the CSV file below ⬇️
 """)
 
-uploaded_file = st.file_uploader("\U0001F4C1 Upload your sales CSV file", type=["csv"])
+uploaded_file = st.file_uploader("📁 Upload your sales CSV file", type=["csv"])
 
+# --- KPI Thresholds ---
 thresh_gp = 25000
 thresh_vmp = 55
 thresh_gp_per_smt = 460
 thresh_vhi_fios = 8
 
+# --- PDF Generator Function ---
 def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num_draws=3):
     buffer = io.BytesIO()
     future_date = datetime.today() + relativedelta(months=2)
@@ -44,7 +46,11 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
     styles = getSampleStyleSheet()
     elements = []
 
-    title_style = ParagraphStyle('TitleStyle', fontSize=14, alignment=1, textColor=colors.white, backColor=colors.lightblue, spaceAfter=12, spaceBefore=12)
+    title_style = ParagraphStyle(
+        'TitleStyle', fontSize=14, alignment=1,
+        textColor=colors.white, backColor=colors.lightblue,
+        spaceAfter=12, spaceBefore=12
+    )
     elements.append(Paragraph(f"MARCUS ALTMAN {month_label.upper()} COMMISSION SETTLEMENT STATEMENT", title_style))
 
     body_text = f"""
@@ -61,9 +67,9 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
 
     table_data = [
         ["<b>MARCUS ALTMAN</b>", "<b>TOTAL BREAKDOWN</b>", "<b>Draws & Rates</b>"],
-        ["GROSS PROFIT", "TOTAL GP EARNED", "% EARNED"],
+        ["GROSS PROFIT", f"${gp_amount:,.2f}", f"{commission_rate}%"],
         ["NET COMMISSION", f"${net_commission:,.2f}", ""],
-        ["PAID TOTAL Draw", f"<font color='red'>(${draws:,.2f})</font>", f"{num_draws} Draws"],
+        ["PAID TOTAL Draw", "", ""],
         ["<b><font color='white'>Paid Total Commission</font></b>", f"<b><font color='white'>${paid_total:,.2f}</font></b>", ""]
     ]
 
@@ -75,10 +81,8 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
         ('TEXTCOLOR', (0,4), (-1,4), colors.white),
         ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
         ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
-        ('ALIGN', (1,2), (1,2), 'RIGHT'),
-        ('ALIGN', (1,3), (1,3), 'RIGHT'),
-        ('ALIGN', (1,4), (1,4), 'RIGHT'),
-        ('ALIGN', (2,3), (2,3), 'CENTER')
+        ('ALIGN', (1,1), (2,2), 'RIGHT'),
+        ('ALIGN', (1,4), (2,4), 'RIGHT'),
     ]))
 
     elements.append(table)
@@ -87,7 +91,10 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
     footer_text = f"""
     Keep in mind there is no draw for this upcoming week pay date. Total owed to you is <b>${paid_total:,.2f}</b>.<br/>
     Keep in mind any charge backs for {month_label.split()[0]} can show up in future settlements up until 180 days.<br/>
-    Please reply with an e-mail stating you are accepting this settlement as final. Should you have any questions or disputes please reply within one business day. <br/>Please contact me by e-mail at <a href='mailto:Thimotee.Wiguen@wireless-zone.com'>Thimotee.Wiguen@wireless-zone.com</a><br/><br/>Thank you.<br/><br/><font color='red'><i>-Wiguen</i></font>
+    Please reply with an e-mail stating you are accepting this settlement as final. Should you have any questions or disputes please reply within one business day. <br/>
+    Please contact me by e-mail at <a href='mailto:Thimotee.Wiguen@wireless-zone.com'>Thimotee.Wiguen@wireless-zone.com</a><br/><br/>
+    Thank you.<br/><br/>
+    <font color='red'><i>-Wiguen</i></font>
     """
     elements.append(Paragraph(footer_text, styles['Normal']))
 
@@ -95,6 +102,7 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
     buffer.seek(0)
     return buffer, file_label
 
+# --- Main App Logic ---
 if uploaded_file is not None:
     try:
         df = pd.read_csv(uploaded_file)
@@ -126,15 +134,27 @@ if uploaded_file is not None:
 
             summary_df = pd.DataFrame({
                 "Metric": ["Gross Profit", "VMP (VZ Perks Rate)", "GP Per Smartphone", "VHI/FIOS Activations"],
-                "Value": [f"${marcus['GP']:,.2f}", f"{marcus['VZ Perks Rate']:.2f}%", f"${marcus['GP Per SMT']:,.2f}", f"{int(vhi_fios_total)}"],
-                "Threshold": [f">= ${thresh_gp:,}", f">= {thresh_vmp}%", f">= ${thresh_gp_per_smt}", f">= {thresh_vhi_fios}"],
-                "Met?": ["Yes" if met_gp else "No", "Yes" if met_vmp else "No", "Yes" if met_gp_per_smt else "No", "Yes" if met_vhi_fios else "No"]
+                "Value": [
+                    f"${marcus['GP']:,.2f}",
+                    f"{marcus['VZ Perks Rate']:.2f}%",
+                    f"${marcus['GP Per SMT']:,.2f}",
+                    f"{int(vhi_fios_total)}"
+                ],
+                "Threshold": [
+                    f">= ${thresh_gp:,}", f">= {thresh_vmp}%", f">= ${thresh_gp_per_smt}", f">= {thresh_vhi_fios}"
+                ],
+                "Met?": [
+                    "Yes" if met_gp else "No",
+                    "Yes" if met_vmp else "No",
+                    "Yes" if met_gp_per_smt else "No",
+                    "Yes" if met_vhi_fios else "No"
+                ]
             })
 
-            st.subheader("\U0001F4CB Marcus Performance Summary")
+            st.subheader("📋 Marcus Performance Summary")
             st.dataframe(summary_df, use_container_width=True)
 
-            st.subheader("\U0001F4B0 Commission Calculator")
+            st.subheader("💰 Commission Calculator")
             st.markdown(f"**Commission Rate:** {'30%' if all_targets_met else '25%'}")
             st.markdown(f"**Commission Earned:** ${commission_earned:,.2f}")
 
@@ -146,28 +166,11 @@ if uploaded_file is not None:
             )
 
             st.download_button(
-                "\U0001F4E5 Download Settlement Statement",
+                "📥 Download Settlement Statement",
                 data=pdf_bytes,
                 file_name=f"Marcus_Settlement_{month_label}.pdf",
                 mime="application/pdf"
             )
-
-            st.markdown("---")
-            st.subheader("\U0001F4D8 Commission Structure Explained")
-            st.markdown("""
-Your commission is based on whether you meet or exceed **four key performance thresholds** for the month:
-
-1. **Gross Profit (GP)** must be at least **$25,000**  
-2. **VZ Perks Rate (VMP)** must be **55% or higher**  
-3. **Gross Profit Per Smartphone (GP/SMT)** must be **$460 or more**  
-4. **VHI/FIOS Activations** (combined total of FWA GA + FIOS GA) must be **8 or more**
-
-### 💸 Commission Payout Logic:
-- If **all 4 metrics are met**, your commission rate is **30% of your total GP**  
-- If **any metric is missed**, your commission rate is **25% of your total GP**
-
-This tool automatically checks all metrics, calculates your commission, and generates a PDF settlement statement.
-""")
 
     except Exception as e:
         st.error(f"❌ Error processing file: {e}")

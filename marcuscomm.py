@@ -70,7 +70,7 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
         ["GROSS PROFIT", f"${gp_amount:,.2f}", f"{commission_rate}%"],
         ["NET COMMISSION", f"${net_commission:,.2f}", ""],
         ["PAID TOTAL Draw", "", ""],
-        ["Paid Total Commission", f"${paid_total:,.2f}", ""]
+        ["Paid Total Commission", "", ""]
     ]
 
     table = Table(table_data, colWidths=[160, 200, 160])
@@ -80,9 +80,8 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
         ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
         ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
         ('ALIGN', (1,1), (2,2), 'RIGHT'),
-        ('ALIGN', (1,4), (2,4), 'RIGHT'),
-        ('BACKGROUND', (0,4), (-1,4), colors.green),
-        ('TEXTCOLOR', (0,4), (-1,4), colors.white),
+        ('BACKGROUND', (0,4), (-1,4), colors.lightgrey),
+        ('TEXTCOLOR', (0,4), (-1,4), colors.black),
         ('FONTNAME', (0,4), (-1,4), 'Helvetica-Bold')
     ]))
 
@@ -98,6 +97,7 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
     doc.build(elements)
     buffer.seek(0)
     return buffer, file_label
+
 
 # --- Main App Logic ---
 if uploaded_file is not None:

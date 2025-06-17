@@ -1,10 +1,12 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from reportlab.lib.pagesizes import LETTER
-from reportlab.pdfgen import canvas
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from reportlab.lib.pagesizes import LETTER
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import io
 
 st.set_page_config(page_title="Marcus Commission Calculator", layout="wide")
@@ -25,73 +27,73 @@ Upload your monthly sales CSV to automatically evaluate key performance metrics 
 9. Upload the CSV file below ⬇️
 """)
 
-# Upload sales CSV
 uploaded_file = st.file_uploader("\U0001F4C1 Upload your sales CSV file", type=["csv"])
 
-# KPI Thresholds
 thresh_gp = 25000
 thresh_vmp = 55
 thresh_gp_per_smt = 460
 thresh_vhi_fios = 8
 
 def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num_draws=3):
-    output = io.BytesIO()
-    c = canvas.Canvas(output, pagesize=LETTER)
-    width, height = LETTER
-
-    # Calculate future statement month
+    buffer = io.BytesIO()
     future_date = datetime.today() + relativedelta(months=2)
     month_label = future_date.strftime("%B %Y")
+    file_label = future_date.strftime("%B_%Y")
 
-    # Title & Header
-    c.setFont("Helvetica-Bold", 14)
-    c.drawCentredString(width / 2, height - 60, f"MARCUS ALTMAN {month_label.upper()} COMMISSION SETTLEMENT STATEMENT")
-    c.setFont("Helvetica", 11)
-    c.drawString(50, height - 100, "Dear Marcus Altman,")
-    c.drawString(50, height - 120, "Elypse Systems and Solutions Inc presents to you your commission statement per")
-    c.drawString(50, height - 135, "the compensation structure and your results for the reporting period.")
+    doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
+    styles = getSampleStyleSheet()
+    elements = []
 
-    # Data section
-    y = height - 180
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(50, y, "MARCUS ALTMAN TOTAL BREAKDOWN")
-    c.setFont("Helvetica", 11)
-    y -= 20
-    c.drawString(50, y, f"TOTAL GP EARNED")
-    c.drawString(300, y, f"${gp_amount:,.2f}")
-    y -= 20
-    c.drawString(50, y, "DRAWS & RATES")
-    c.drawString(300, y, f"{int(commission_rate)}%")
+    title_style = ParagraphStyle('TitleStyle', fontSize=14, alignment=1, textColor=colors.white, backColor=colors.lightblue, spaceAfter=12, spaceBefore=12)
+    elements.append(Paragraph(f"MARCUS ALTMAN {month_label.upper()} COMMISSION SETTLEMENT STATEMENT", title_style))
 
-    # Commission calculation
+    body_text = f"""
+    Dear Marcus Altman,<br/><br/>
+    <b>Elypse</b> Systems and Solutions Inc presents to you your commission statement per the compensation structure and your results in {month_label.split()[0]}. You will be paid tier 3 at {commission_rate}%, this is in accordance to your performance and compensation structure.
+    """
+    elements.append(Paragraph(body_text, styles['Normal']))
+    elements.append(Spacer(1, 20))
+    elements.append(Paragraph("Here is the details and breakdown:", styles['Normal']))
+    elements.append(Spacer(1, 10))
+
     net_commission = gp_amount * (commission_rate / 100)
     paid_total = net_commission - draws
 
-    y -= 30
-    c.drawString(50, y, f"NET COMMISSION")
-    c.drawString(300, y, f"${net_commission:,.2f}")
-    y -= 20
-    c.drawString(50, y, f"PAID TOTAL Draw (${draws:,.2f}) {num_draws} Draws")
-    y -= 20
-    c.drawString(50, y, f"Paid Total Commission")
-    c.drawString(300, y, f"${paid_total:,.2f}")
+    table_data = [
+        ["<b>MARCUS ALTMAN</b>", "<b>TOTAL BREAKDOWN</b>", "<b>Draws & Rates</b>"],
+        ["GROSS PROFIT", "TOTAL GP EARNED", "% EARNED"],
+        ["NET COMMISSION", f"${net_commission:,.2f}", ""],
+        ["PAID TOTAL Draw", f"<font color='red'>(${draws:,.2f})</font>", f"{num_draws} Draws"],
+        ["<b><font color='white'>Paid Total Commission</font></b>", f"<b><font color='white'>${paid_total:,.2f}</font></b>", ""]
+    ]
 
-    # Footer
-    y -= 50
-    c.drawString(50, y, f"Keep in mind there is no draw for this upcoming week. Total owed to you is ${paid_total:,.2f}.")
-    y -= 20
-    c.drawString(50, y, f"Chargebacks may still apply and can show up in future settlements up to 180 days.")
-    y -= 40
-    c.drawString(50, y, f"Please reply via e-mail to accept this statement as final or to dispute within 1 business day.")
-    y -= 30
-    c.drawString(50, y, f"Thank you,")
-    y -= 20
-    c.drawString(50, y, f"- Wiguen")
+    table = Table(table_data, colWidths=[160, 200, 160])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.black),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+        ('BACKGROUND', (0,4), (-1,4), colors.green),
+        ('TEXTCOLOR', (0,4), (-1,4), colors.white),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+        ('ALIGN', (1,2), (1,2), 'RIGHT'),
+        ('ALIGN', (1,3), (1,3), 'RIGHT'),
+        ('ALIGN', (1,4), (1,4), 'RIGHT'),
+        ('ALIGN', (2,3), (2,3), 'CENTER')
+    ]))
 
-    c.showPage()
-    c.save()
-    output.seek(0)
-    return output, future_date.strftime("%B_%Y")
+    elements.append(table)
+    elements.append(Spacer(1, 20))
+
+    footer_text = f"""
+    Keep in mind there is no draw for this upcoming week pay date. Total owed to you is <b>${paid_total:,.2f}</b>.<br/>
+    Keep in mind any charge backs for {month_label.split()[0]} can show up in future settlements up until 180 days.<br/>
+    Please reply with an e-mail stating you are accepting this settlement as final. Should you have any questions or disputes please reply within one business day. <br/>Please contact me by e-mail at <a href='mailto:Thimotee.Wiguen@wireless-zone.com'>Thimotee.Wiguen@wireless-zone.com</a><br/><br/>Thank you.<br/><br/><font color='red'><i>-Wiguen</i></font>
+    """
+    elements.append(Paragraph(footer_text, styles['Normal']))
+
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer, file_label
 
 if uploaded_file is not None:
     try:
@@ -123,19 +125,10 @@ if uploaded_file is not None:
             commission_earned = marcus['GP'] * commission_rate if not pd.isna(marcus['GP']) else 0
 
             summary_df = pd.DataFrame({
-                "Metric": [
-                    "Gross Profit", "VMP (VZ Perks Rate)", "GP Per Smartphone", "VHI/FIOS Activations"
-                ],
-                "Value": [
-                    f"${marcus['GP']:,.2f}", f"{marcus['VZ Perks Rate']:.2f}%", f"${marcus['GP Per SMT']:,.2f}", f"{int(vhi_fios_total)}"
-                ],
-                "Threshold": [
-                    f">= ${thresh_gp:,}", f">= {thresh_vmp}%", f">= ${thresh_gp_per_smt}", f">= {thresh_vhi_fios}"
-                ],
-                "Met?": [
-                    "Yes" if met_gp else "No", "Yes" if met_vmp else "No",
-                    "Yes" if met_gp_per_smt else "No", "Yes" if met_vhi_fios else "No"
-                ]
+                "Metric": ["Gross Profit", "VMP (VZ Perks Rate)", "GP Per Smartphone", "VHI/FIOS Activations"],
+                "Value": [f"${marcus['GP']:,.2f}", f"{marcus['VZ Perks Rate']:.2f}%", f"${marcus['GP Per SMT']:,.2f}", f"{int(vhi_fios_total)}"],
+                "Threshold": [f">= ${thresh_gp:,}", f">= {thresh_vmp}%", f">= ${thresh_gp_per_smt}", f">= {thresh_vhi_fios}"],
+                "Met?": ["Yes" if met_gp else "No", "Yes" if met_vmp else "No", "Yes" if met_gp_per_smt else "No", "Yes" if met_vhi_fios else "No"]
             })
 
             st.subheader("\U0001F4CB Marcus Performance Summary")

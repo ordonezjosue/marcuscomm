@@ -66,23 +66,24 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
     paid_total = net_commission - draws
 
     table_data = [
-        ["<b>MARCUS ALTMAN</b>", "<b>TOTAL BREAKDOWN</b>", "<b>Draws & Rates</b>"],
+        ["MARCUS ALTMAN", "TOTAL BREAKDOWN", "Draws & Rates"],
         ["GROSS PROFIT", f"${gp_amount:,.2f}", f"{commission_rate}%"],
         ["NET COMMISSION", f"${net_commission:,.2f}", ""],
         ["PAID TOTAL Draw", "", ""],
-        ["<b><font color='white'>Paid Total Commission</font></b>", f"<b><font color='white'>${paid_total:,.2f}</font></b>", ""]
+        ["Paid Total Commission", f"${paid_total:,.2f}", ""]
     ]
 
     table = Table(table_data, colWidths=[160, 200, 160])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), colors.black),
         ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-        ('BACKGROUND', (0,4), (-1,4), colors.green),
-        ('TEXTCOLOR', (0,4), (-1,4), colors.white),
         ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
         ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
         ('ALIGN', (1,1), (2,2), 'RIGHT'),
         ('ALIGN', (1,4), (2,4), 'RIGHT'),
+        ('BACKGROUND', (0,4), (-1,4), colors.green),
+        ('TEXTCOLOR', (0,4), (-1,4), colors.white),
+        ('FONTNAME', (0,4), (-1,4), 'Helvetica-Bold')
     ]))
 
     elements.append(table)
@@ -132,6 +133,7 @@ if uploaded_file is not None:
             commission_rate = 0.30 if all_targets_met else 0.25
             commission_earned = marcus['GP'] * commission_rate if not pd.isna(marcus['GP']) else 0
 
+            st.subheader("📋 Marcus Performance Summary")
             summary_df = pd.DataFrame({
                 "Metric": ["Gross Profit", "VMP (VZ Perks Rate)", "GP Per Smartphone", "VHI/FIOS Activations"],
                 "Value": [
@@ -150,8 +152,6 @@ if uploaded_file is not None:
                     "Yes" if met_vhi_fios else "No"
                 ]
             })
-
-            st.subheader("📋 Marcus Performance Summary")
             st.dataframe(summary_df, use_container_width=True)
 
             st.subheader("💰 Commission Calculator")

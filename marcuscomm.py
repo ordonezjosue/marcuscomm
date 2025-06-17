@@ -91,7 +91,7 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
 
     footer_text = f"""
     Keep in mind there is no draw for this upcoming week pay date. Total owed to you is <b>${paid_total:,.2f}</b>. Any chargebacks for {month_label.split()[0]} may appear in future settlements within 180 days. If you accept this statement as final, please reply via e-mail. For any questions or disputes, respond within one business day. You can reach me at <a href='mailto:Thimotee.Wiguen@wireless-zone.com'>Thimotee.Wiguen@wireless-zone.com</a>.
-    <br/><br/>Thank you.<br/><br/><font color='red'><i>-Wiguen</i></font>
+    <br/><br/>Thank you.<br/><br/><font color='black'><i><b>-Wiguen</b></i></font>
     """
     elements.append(Paragraph(footer_text, styles['Normal']))
 

@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import calendar
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from reportlab.lib.pagesizes import LETTER
@@ -29,6 +30,28 @@ Upload your monthly sales CSV to automatically evaluate key performance metrics 
 
 uploaded_file = st.file_uploader("📁 Upload your sales CSV file", type=["csv"])
 
+# --- Month/Year Dropdown Setup ---
+st.subheader("🗓️ Report Setup")
+
+current_year = datetime.now().year
+years = list(range(current_year - 1, current_year + 2))
+months = list(calendar.month_name)[1:]  # Skip index 0 (empty string)
+
+col1, col2 = st.columns(2)
+with col1:
+    report_month = st.selectbox("Performance Month", months, index=datetime.now().month - 2)
+    report_year = st.selectbox("Performance Year", years, index=1)
+
+with col2:
+    payout_month = st.selectbox("Payout Month", months, index=datetime.now().month - 1)
+    payout_year = st.selectbox("Payout Year", years, index=1)
+
+col3, col4 = st.columns(2)
+with col3:
+    draw_amount = st.number_input("💵 Draw Amount", min_value=0, value=1800, step=100)
+with col4:
+    num_draws = st.number_input("🔢 Number of Draws", min_value=0, value=3, step=1)
+
 # --- KPI Thresholds ---
 thresh_gp = 25000
 thresh_vmp = 55
@@ -36,12 +59,12 @@ thresh_gp_per_smt = 460
 thresh_vhi_fios = 8
 
 # --- PDF Generator Function ---
-def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num_draws=3):
+def generate_filled_pdf_from_scratch(gp_amount, commission_rate, report_month, report_year, payout_month, payout_year, draws=1800, num_draws=3):
     buffer = io.BytesIO()
-    future_date = datetime.today() + relativedelta(months=2)
-    statement_month = future_date.strftime("%B %Y")
-    report_month = (future_date - relativedelta(months=1)).strftime("%B")
-    file_label = future_date.strftime("%B_%Y")
+
+    statement_month = f"{payout_month} {payout_year}"
+    report_month_label = report_month
+    file_label = f"{payout_month}_{payout_year}"
 
     doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
     styles = getSampleStyleSheet()
@@ -59,7 +82,7 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
     tier_label = "tier 1 at 25%" if commission_rate == 25 else "tier 2 at 30%"
     body_text = (
         f"Dear Marcus Altman,<br/><br/>"
-        f"<br/>&nbsp;&nbsp;&nbsp;&nbsp;Elypse Systems and Solutions Inc presents to you your commission statement based on your results from {report_month}. "
+        f"<br/>&nbsp;&nbsp;&nbsp;&nbsp;Elypse Systems and Solutions Inc presents to you your commission statement based on your results from {report_month_label} {report_year}. "
         f"This statement is scheduled for payout in {statement_month}. You will be paid {tier_label}, in accordance with your performance and compensation structure."
     )
     elements.append(Paragraph(body_text, styles['Normal']))
@@ -74,8 +97,8 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
         ["MARCUS ALTMAN", "TOTAL BREAKDOWN", "Draws & Rates"],
         ["GROSS PROFIT", f"${gp_amount:,.2f}", f"{commission_rate}%"],
         ["NET COMMISSION", f"${net_commission:,.2f}", ""],
-        ["PAID TOTAL Draw", "", ""],
-        ["Paid Total Commission", "", ""]
+        [f"PAID TOTAL Draw ({num_draws}x)", f"-${draws:,.2f}", ""],
+        ["Paid Total Commission", f"${paid_total:,.2f}", ""]
     ]
 
     table = Table(table_data, colWidths=[160, 200, 160])
@@ -94,7 +117,7 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
     elements.append(Spacer(1, 20))
 
     footer_text = f"""
-    Keep in mind there is no draw for this upcoming week pay date. Total owed to you is <b>$xxxx.xx</b>. Any chargebacks for {report_month} may appear in future settlements within 180 days.
+    Keep in mind there is no draw for this upcoming week pay date. Total owed to you is <b>${paid_total:,.2f}</b>. Any chargebacks for {report_month_label} may appear in future settlements within 180 days.
     If you accept this statement as final, please reply via e-mail. For any questions or disputes, respond within one business day. You can reach me at <a href='mailto:Thimotee.Wiguen@wireless-zone.com'>Thimotee.Wiguen@wireless-zone.com</a>.
     <br/><br/>Thank you.<br/><br/><font color='black'><i><b>-Wiguen</b></i></font>
     """
@@ -127,7 +150,7 @@ if uploaded_file is not None:
             met_vmp = marcus['VZ Perks Rate'] >= thresh_vmp if not pd.isna(marcus['VZ Perks Rate']) else False
             met_gp_per_smt = marcus['GP Per SMT'] >= thresh_gp_per_smt if not pd.isna(marcus['GP Per SMT']) else False
             vhi_fios_total = marcus[['VZ FWA GA', 'VZ FIOS GA']].fillna(0).sum()
-            met_vhi_fios = vhi_fios_total >= thresh_vhi_fios if not pd.isna(vhi_fios_total) else False
+            met_vhi_fios = vhi_fios_total >= thresh_vhi_fios
 
             all_targets_met = all([met_gp, met_vmp, met_gp_per_smt, met_vhi_fios])
             commission_rate = 0.30 if all_targets_met else 0.25
@@ -140,7 +163,7 @@ if uploaded_file is not None:
                     f"${marcus['GP']:,.2f}" if not pd.isna(marcus['GP']) else "N/A",
                     f"{marcus['VZ Perks Rate']:.2f}%" if not pd.isna(marcus['VZ Perks Rate']) else "N/A",
                     f"${marcus['GP Per SMT']:,.2f}" if not pd.isna(marcus['GP Per SMT']) else "N/A",
-                    f"{int(vhi_fios_total)}" if not pd.isna(vhi_fios_total) else "N/A"
+                    f"{int(vhi_fios_total)}"
                 ],
                 "Threshold": [
                     f">= ${thresh_gp:,}", f">= {thresh_vmp}%", f">= ${thresh_gp_per_smt}", f">= {thresh_vhi_fios}"
@@ -161,8 +184,12 @@ if uploaded_file is not None:
             pdf_bytes, month_label = generate_filled_pdf_from_scratch(
                 gp_amount=marcus['GP'],
                 commission_rate=int(commission_rate * 100),
-                draws=1800,
-                num_draws=3
+                report_month=report_month,
+                report_year=report_year,
+                payout_month=payout_month,
+                payout_year=payout_year,
+                draws=draw_amount,
+                num_draws=num_draws
             )
 
             st.download_button(

@@ -126,7 +126,7 @@ if uploaded_file is not None:
             met_gp = marcus['GP'] >= thresh_gp if not pd.isna(marcus['GP']) else False
             met_vmp = marcus['VZ Perks Rate'] >= thresh_vmp if not pd.isna(marcus['VZ Perks Rate']) else False
             met_gp_per_smt = marcus['GP Per SMT'] >= thresh_gp_per_smt if not pd.isna(marcus['GP Per SMT']) else False
-            vhi_fios_total = (marcus['VZ FWA GA'] or 0) + (marcus['VZ FIOS GA'] or 0)
+            vhi_fios_total = marcus[['VZ FWA GA', 'VZ FIOS GA']].fillna(0).sum()
             met_vhi_fios = vhi_fios_total >= thresh_vhi_fios if not pd.isna(vhi_fios_total) else False
 
             all_targets_met = all([met_gp, met_vmp, met_gp_per_smt, met_vhi_fios])

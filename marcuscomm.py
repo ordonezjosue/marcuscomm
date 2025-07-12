@@ -28,20 +28,17 @@ Upload your monthly sales CSV to automatically evaluate key performance metrics 
 9. Upload the CSV file below ⬇️
 """)
 
-uploaded_file = st.file_uploader("📁 Upload your sales CSV file", type=["csv"])
-
-# --- Month/Year Dropdown Setup ---
+# === Setup Section (Always Visible) ===
 st.subheader("🗓️ Report Setup")
 
 current_year = datetime.now().year
 years = list(range(current_year - 1, current_year + 2))
-months = list(calendar.month_name)[1:]  # Skip index 0 (empty string)
+months = list(calendar.month_name)[1:]  # Jan to Dec
 
 col1, col2 = st.columns(2)
 with col1:
     report_month = st.selectbox("Performance Month", months, index=datetime.now().month - 2)
     report_year = st.selectbox("Performance Year", years, index=1)
-
 with col2:
     payout_month = st.selectbox("Payout Month", months, index=datetime.now().month - 1)
     payout_year = st.selectbox("Payout Year", years, index=1)
@@ -52,13 +49,15 @@ with col3:
 with col4:
     num_draws = st.number_input("🔢 Number of Draws", min_value=0, value=3, step=1)
 
+uploaded_file = st.file_uploader("📁 Upload your sales CSV file", type=["csv"])
+
 # --- KPI Thresholds ---
 thresh_gp = 25000
 thresh_vmp = 55
 thresh_gp_per_smt = 460
 thresh_vhi_fios = 8
 
-# --- PDF Generator Function ---
+# --- PDF Generator ---
 def generate_filled_pdf_from_scratch(gp_amount, commission_rate, report_month, report_year, payout_month, payout_year, draws=1800, num_draws=3):
     buffer = io.BytesIO()
 

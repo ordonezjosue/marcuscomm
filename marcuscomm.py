@@ -54,17 +54,13 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
         fontName='Helvetica-Bold'
     )
     elements.append(Paragraph(f"MARCUS ALTMAN {statement_month.upper()} COMMISSION SETTLEMENT STATEMENT", title_style))
-
-    # Add spacing below header
     elements.append(Spacer(1, 10))
 
-    # Determine tier level
     tier_label = "tier 1 at 25%" if commission_rate == 25 else "tier 2 at 30%"
-
-    # Body content using plain Paragraph with line breaks instead of <para>
     body_text = (
         f"Dear Marcus Altman,<br/><br/>"
-        f"<br/>&nbsp;&nbsp;&nbsp;&nbsp;Elypse Systems and Solutions Inc presents to you your commission statement based on your results from {report_month}. This statement is scheduled for payout in {statement_month}. You will be paid {tier_label}, in accordance with your performance and compensation structure."
+        f"<br/>&nbsp;&nbsp;&nbsp;&nbsp;Elypse Systems and Solutions Inc presents to you your commission statement based on your results from {report_month}. "
+        f"This statement is scheduled for payout in {statement_month}. You will be paid {tier_label}, in accordance with your performance and compensation structure."
     )
     elements.append(Paragraph(body_text, styles['Normal']))
     elements.append(Spacer(1, 20))
@@ -98,19 +94,14 @@ def generate_filled_pdf_from_scratch(gp_amount, commission_rate, draws=1800, num
     elements.append(Spacer(1, 20))
 
     footer_text = f"""
-    Keep in mind there is no draw for this upcoming week pay date. Total owed to you is <b>$xxxx.xx</b>. Any chargebacks for {report_month} may appear in future settlements within 180 days. If you accept this statement as final, please reply via e-mail. For any questions or disputes, respond within one business day. You can reach me at <a href='mailto:Thimotee.Wiguen@wireless-zone.com'>Thimotee.Wiguen@wireless-zone.com</a>.
+    Keep in mind there is no draw for this upcoming week pay date. Total owed to you is <b>$xxxx.xx</b>. Any chargebacks for {report_month} may appear in future settlements within 180 days.
+    If you accept this statement as final, please reply via e-mail. For any questions or disputes, respond within one business day. You can reach me at <a href='mailto:Thimotee.Wiguen@wireless-zone.com'>Thimotee.Wiguen@wireless-zone.com</a>.
     <br/><br/>Thank you.<br/><br/><font color='black'><i><b>-Wiguen</b></i></font>
     """
     elements.append(Paragraph(footer_text, styles['Normal']))
-
     doc.build(elements)
     buffer.seek(0)
     return buffer, file_label
-
-
-
-
-
 
 # --- Main App Logic ---
 if uploaded_file is not None:
@@ -136,7 +127,7 @@ if uploaded_file is not None:
             met_vmp = marcus['VZ Perks Rate'] >= thresh_vmp if not pd.isna(marcus['VZ Perks Rate']) else False
             met_gp_per_smt = marcus['GP Per SMT'] >= thresh_gp_per_smt if not pd.isna(marcus['GP Per SMT']) else False
             vhi_fios_total = (marcus['VZ FWA GA'] or 0) + (marcus['VZ FIOS GA'] or 0)
-            met_vhi_fios = vhi_fios_total >= thresh_vhi_fios
+            met_vhi_fios = vhi_fios_total >= thresh_vhi_fios if not pd.isna(vhi_fios_total) else False
 
             all_targets_met = all([met_gp, met_vmp, met_gp_per_smt, met_vhi_fios])
             commission_rate = 0.30 if all_targets_met else 0.25
@@ -146,10 +137,10 @@ if uploaded_file is not None:
             summary_df = pd.DataFrame({
                 "Metric": ["Gross Profit", "VMP (VZ Perks Rate)", "GP Per Smartphone", "VHI/FIOS Activations"],
                 "Value": [
-                    f"${marcus['GP']:,.2f}",
-                    f"{marcus['VZ Perks Rate']:.2f}%",
-                    f"${marcus['GP Per SMT']:,.2f}",
-                    f"{int(vhi_fios_total)}"
+                    f"${marcus['GP']:,.2f}" if not pd.isna(marcus['GP']) else "N/A",
+                    f"{marcus['VZ Perks Rate']:.2f}%" if not pd.isna(marcus['VZ Perks Rate']) else "N/A",
+                    f"${marcus['GP Per SMT']:,.2f}" if not pd.isna(marcus['GP Per SMT']) else "N/A",
+                    f"{int(vhi_fios_total)}" if not pd.isna(vhi_fios_total) else "N/A"
                 ],
                 "Threshold": [
                     f">= ${thresh_gp:,}", f">= {thresh_vmp}%", f">= ${thresh_gp_per_smt}", f">= {thresh_vhi_fios}"
